@@ -331,7 +331,7 @@ Z3_ast create_phi_3_pop(Z3_context ctx, const TunnelNetwork network, int length)
                             continue;
 
                         // Prémisse
-                        Z3_ast premise_parts[2];
+                        Z3_ast premise_parts[3];
                         premise_parts[0] = tn_path_variable(ctx, node, pos, height);
                         premise_parts[1] = (protocol_b == 4)?
                                             tn_4_variable(ctx, pos, height):
@@ -639,7 +639,7 @@ Z3_ast create_phi_6_trans(Z3_context ctx, const TunnelNetwork network, int lengt
     int impl_count = 0;
 
     //Pour chaque position
-    for (int pos = 0; pos <= length; pos++)
+    for (int pos = 0; pos < length; pos++)
    {
         // Pour chaque noeud
         for(int node = 0; node < num_nodes; node++)
@@ -818,7 +818,7 @@ Z3_ast create_phi_6_pop(Z3_context ctx, const TunnelNetwork network, int length)
                         else 
                         {
                             Z3_ast cell_preservations[height];
-                            for (int cell = 0; cell <= height; cell++)
+                            for (int cell = 0; cell < height; cell++)
                             {
                                 Z3_ast eq_4 = Z3_mk_eq(ctx, 
                                                     tn_4_variable(ctx, pos, cell),

@@ -444,182 +444,119 @@ Z3_ast create_phi_4(Z3_context ctx, const TunnelNetwork network, int length)
 }
 
 /**
- * Vérifie que le sommet de pile corrspond à l'opération de transmission
+ * φ5 : Le sommet de pile doit être compatible avec AU MOINS UNE action du nœud
  */
-Z3_ast create_phi_5_trans(Z3_context ctx, const TunnelNetwork network, int length)
-{
-    int num_nodes = tn_get_num_nodes(network);
-    int stack_size = get_stack_size(length);
-
-    int max_implications = (length + 1) * num_nodes * stack_size * 2;
-    Z3_ast implications[max_implications]; 
-    int impl_count = 0;
-
-    //Pour chaque position
-    for (int pos = 0; pos <= length; pos++)
-   {
-        // Pour chaque noeud
-        for(int node = 0; node < num_nodes; node++)
-       {
-            // pour chaque hauteur
-            for (int height =0; height < stack_size; height++)
-           {
-                // Pour chaque protocole (4 et 6)
-                for (int protocol = 4; protocol <= 6; protocol +=2)
-               {
-                    stack_action action = (protocol == 4)? transmit_4: transmit_6;
-
-                    if(!tn_node_has_action(network, node, action))
-                        continue;
-                    
-                    // Prémisse
-                    Z3_ast premise = tn_path_variable(ctx,node, pos, height) ;
-                    
-                    // Conclusion 
-                    Z3_ast conclusion = (protocol == 4)?
-                                        tn_4_variable(ctx, pos, height):
-                                        tn_6_variable(ctx, pos, height);
-                     
-                    // Implication
-                    implications[impl_count] = Z3_mk_implies(ctx, premise, conclusion);
-                    impl_count++;                 
-               } 
-           } 
-       } 
-   } 
-   if (impl_count == 0)
-        return Z3_mk_true(ctx);
-   return Z3_mk_and(ctx, impl_count, implications); 
-}
-
-/**
- * Vérifie que le sommet actuel correspond au protocole à encaplsuler
- */
-
-Z3_ast create_phi_5_push(Z3_context ctx, const TunnelNetwork network, int length)
-{
-    int num_nodes = tn_get_num_nodes(network);
-    int stack_size = get_stack_size(length);
-
-    int max_implications = (length + 1) * num_nodes * stack_size * 4;
-    Z3_ast implications[max_implications]; 
-    int impl_count = 0;
-
-    //Pour chaque position
-    for (int pos = 0; pos <= length; pos++)
-   {
-        // Pour chaque noeud
-        for(int node = 0; node < num_nodes; node++)
-       {
-            // pour chaque hauteur
-            for (int height =0; height < stack_size; height++)
-           {
-                // Pour chaque combinaison (a,b)
-                for (int protocol_a = 4; protocol_a <= 6; protocol_a +=2)
-               {
-                    for (int protocol_b = 4; protocol_b <=6; protocol_b +=2)
-                    {
-                        // push correspondant
-                        stack_action action;
-                        if(protocol_a == 4 && protocol_b ==4) action = push_4_4;
-                        else if (protocol_a == 4 && protocol_b == 6) action = push_4_6;
-                        else if (protocol_a == 6 && protocol_b == 4) action = push_6_4;
-                        else action = push_6_6;
-
-                        if (!tn_node_has_action(network, node, action))
-                            continue;       
-                            
-                        // Premisse 
-                        Z3_ast premise = tn_path_variable(ctx, node, pos, height);
-                        
-                        // Conclusion
-                        Z3_ast conclusion = (protocol_a == 4)?
-                                            tn_4_variable(ctx, pos, height):
-                                            tn_6_variable(ctx, pos, height);
-                        
-                        implications[impl_count] = Z3_mk_implies(ctx, premise, conclusion); 
-                        impl_count++;                    
-                    }   
-                } 
-            } 
-        } 
-    }     
-   if (impl_count == 0)
-        return Z3_mk_true(ctx);
-   return Z3_mk_and(ctx, impl_count, implications); 
-}
-
-/**
- * Vérifie que le sommet actuel est b est juste dessous est a
- */
-
-Z3_ast create_phi_5_pop(Z3_context ctx, const TunnelNetwork network, int length)
-{
-    int num_nodes = tn_get_num_nodes(network);
-    int stack_size = get_stack_size(length);
-
-    int max_implications = (length + 1) * num_nodes * stack_size * 4;
-    Z3_ast implications[max_implications]; 
-    int impl_count = 0;
-
-    //Pour chaque position
-    for (int pos = 0; pos <= length; pos++)
-   {
-        // Pour chaque noeud
-        for(int node = 0; node < num_nodes; node++)
-       {
-            // pour chaque hauteur
-            for (int height = 1; height < stack_size; height++)
-           {
-                // Pour chaque combinaison (a,b)
-                for (int protocol_a = 4; protocol_a <= 6; protocol_a +=2)
-               {
-                    for (int protocol_b = 4; protocol_b <=6; protocol_b +=2)
-                    {
-                        // pop correspondant
-                        stack_action action;
-                        if(protocol_a == 4 && protocol_b ==4) action = pop_4_4;
-                        else if (protocol_a == 4 && protocol_b == 6) action = pop_4_6;
-                        else if (protocol_a == 6 && protocol_b == 4) action = pop_6_4;
-                        else action = pop_6_6;
-
-                        if (!tn_node_has_action(network, node, action))
-                            continue;       
-                            
-                        // Premisse 
-                        Z3_ast premise = tn_path_variable(ctx, node, pos, height);
-                        
-                        // Conclusion
-                        Z3_ast conclusion_parts[2];
-                        conclusion_parts[0] = (protocol_b == 4)?
-                                            tn_4_variable(ctx, pos, height):
-                                            tn_6_variable(ctx, pos, height);
-                        conclusion_parts[1] = (protocol_a == 4)?
-                                            tn_4_variable(ctx, pos, height - 1):
-                                            tn_6_variable(ctx, pos, height - 1);
-                        Z3_ast conclusion = Z3_mk_and(ctx, 2, conclusion_parts);
-                                     
-                        // =>
-                        implications[impl_count] = Z3_mk_implies(ctx, premise, conclusion); 
-                        impl_count++;
-                    }   
-                } 
-            } 
-        } 
-    }     
-   if (impl_count == 0)
-        return Z3_mk_true(ctx);
-   return Z3_mk_and(ctx, impl_count, implications); 
-}
-
 Z3_ast create_phi_5(Z3_context ctx, const TunnelNetwork network, int length)
 {
-    Z3_ast phi_5_trans = create_phi_5_trans(ctx, network, length);
-    Z3_ast phi_5_push = create_phi_5_push(ctx, network, length);
-    Z3_ast phi_5_pop = create_phi_5_pop(ctx, network, length);
+    int num_nodes = tn_get_num_nodes(network);
+    int stack_size = get_stack_size(length);
 
-    Z3_ast phi_5_parts[3] ={phi_5_trans, phi_5_push, phi_5_pop};
-    return Z3_mk_and(ctx, 3, phi_5_parts);  
+    int max_implications = (length + 1) * num_nodes * stack_size;
+    Z3_ast implications[max_implications]; 
+    int impl_count = 0;
+
+    // Pour chaque position
+    for (int pos = 0; pos <= length; pos++)
+    {
+        // Pour chaque nœud
+        for (int node = 0; node < num_nodes; node++)
+        {
+            // Pour chaque hauteur
+            for (int height = 0; height < stack_size; height++)
+            {
+                // Prémisse : x_{node, pos, height}
+                Z3_ast premise = tn_path_variable(ctx, node, pos, height);
+                
+                // Conclusion : disjonction des conditions de sommet de pile
+                // pour chaque action que le nœud peut faire
+                int max_conditions = 10; // Au plus 10 actions
+                Z3_ast conditions[max_conditions];
+                int cond_count = 0;
+                
+                // Transmissions : T4 requiert sommet = 4, T6 requiert sommet = 6
+                if (tn_node_has_action(network, node, transmit_4))
+                {
+                    conditions[cond_count] = tn_4_variable(ctx, pos, height);
+                    cond_count++;
+                }
+                if (tn_node_has_action(network, node, transmit_6))
+                {
+                    conditions[cond_count] = tn_6_variable(ctx, pos, height);
+                    cond_count++;
+                }
+                
+                // Push : ↑^b_a requiert sommet = a
+                if (tn_node_has_action(network, node, push_4_4) || 
+                    tn_node_has_action(network, node, push_4_6))
+                {
+                    conditions[cond_count] = tn_4_variable(ctx, pos, height);
+                    cond_count++;
+                }
+                if (tn_node_has_action(network, node, push_6_4) || 
+                    tn_node_has_action(network, node, push_6_6))
+                {
+                    conditions[cond_count] = tn_6_variable(ctx, pos, height);
+                    cond_count++;
+                }
+                
+                // Pop : ↓^b_a requiert sommet = b ET height-1 = a
+                // Pour height >= 1
+                if (height >= 1)
+                {
+                    if (tn_node_has_action(network, node, pop_4_4))
+                    {
+                        // sommet = 4 et dessous = 4
+                        Z3_ast parts[2] = {tn_4_variable(ctx, pos, height), 
+                                           tn_4_variable(ctx, pos, height - 1)};
+                        conditions[cond_count] = Z3_mk_and(ctx, 2, parts);
+                        cond_count++;
+                    }
+                    if (tn_node_has_action(network, node, pop_4_6))
+                    {
+                        // sommet = 6 et dessous = 4
+                        Z3_ast parts[2] = {tn_6_variable(ctx, pos, height), 
+                                           tn_4_variable(ctx, pos, height - 1)};
+                        conditions[cond_count] = Z3_mk_and(ctx, 2, parts);
+                        cond_count++;
+                    }
+                    if (tn_node_has_action(network, node, pop_6_4))
+                    {
+                        // sommet = 4 et dessous = 6
+                        Z3_ast parts[2] = {tn_4_variable(ctx, pos, height), 
+                                           tn_6_variable(ctx, pos, height - 1)};
+                        conditions[cond_count] = Z3_mk_and(ctx, 2, parts);
+                        cond_count++;
+                    }
+                    if (tn_node_has_action(network, node, pop_6_6))
+                    {
+                        // sommet = 6 et dessous = 6
+                        Z3_ast parts[2] = {tn_6_variable(ctx, pos, height), 
+                                           tn_6_variable(ctx, pos, height - 1)};
+                        conditions[cond_count] = Z3_mk_and(ctx, 2, parts);
+                        cond_count++;
+                    }
+                }
+                
+                if (cond_count == 0)
+                {
+                    // Aucune action possible -> ce nœud ne peut pas être là
+                    implications[impl_count] = Z3_mk_not(ctx, premise);
+                    impl_count++;
+                }
+                else
+                {
+                    // Au moins une des conditions doit être vraie
+                    Z3_ast conclusion = Z3_mk_or(ctx, cond_count, conditions);
+                    implications[impl_count] = Z3_mk_implies(ctx, premise, conclusion);
+                    impl_count++;
+                }
+            }
+        }
+    }
+    
+    if (impl_count == 0)
+        return Z3_mk_true(ctx);
+    return Z3_mk_and(ctx, impl_count, implications);
 }
 
 /**
@@ -695,7 +632,7 @@ Z3_ast create_phi_6_push(Z3_context ctx, const TunnelNetwork network, int length
     int num_nodes = tn_get_num_nodes(network);
     int stack_size = get_stack_size(length);
 
-    int max_implications = length * num_nodes * stack_size * 2;
+    int max_implications = length * num_nodes * stack_size * 4;
     Z3_ast implications[max_implications];
     int impl_count = 0;
 
@@ -765,7 +702,7 @@ Z3_ast create_phi_6_pop(Z3_context ctx, const TunnelNetwork network, int length)
     int num_nodes = tn_get_num_nodes(network);
     int stack_size = get_stack_size(length);
 
-    int max_implications = length * num_nodes * stack_size * 2;
+    int max_implications = length * num_nodes * stack_size * 4;
     Z3_ast implications[max_implications];
     int impl_count = 0;
 
@@ -856,6 +793,49 @@ Z3_ast create_phi_6(Z3_context ctx, const TunnelNetwork network, int length)
     return Z3_mk_and(ctx, 3, phi_6_parts);  
 }
 
+/**
+ * Chemin simple (pas de répétition de sommets)
+ */
+Z3_ast create_phi_7(Z3_context ctx, const TunnelNetwork network, int length)
+{
+    int num_nodes = tn_get_num_nodes(network);
+    int stack_size = get_stack_size(length);
+
+    int max_clauses = num_nodes * length * length;
+    Z3_ast clauses[max_clauses];
+    int clause_count = 0;
+    
+    // Pour chaque noeud
+    for (int node = 0; node< num_nodes; node++)
+   {
+        // Pour chaque paire de positions différentes
+        for (int pos1 = 0; pos1 <= length; pos1++)
+       {
+            for (int pos2 = pos1 + 1; pos2<= length; pos2++)
+           {
+                // Le noeud ne peut pas être aux deux positions
+                Z3_ast at_pos1[stack_size];
+                Z3_ast at_pos2[stack_size];
+                
+                for (int h = 0; h < stack_size; h++)
+               {
+                    at_pos1[h] = tn_path_variable(ctx, node, pos1, h);
+                    at_pos2[h] = tn_path_variable(ctx, node, pos2, h);  
+               } 
+
+               Z3_ast node_at_pos1 = Z3_mk_or(ctx, stack_size, at_pos1);
+               Z3_ast node_at_pos2 = Z3_mk_or(ctx, stack_size, at_pos2);
+
+               Z3_ast both[2] = {node_at_pos1, node_at_pos2};
+               clauses[clause_count] = Z3_mk_not(ctx, Z3_mk_and(ctx, 2, both));
+               clause_count++;   
+           } 
+       } 
+    } 
+    if (clause_count ==0)
+        return Z3_mk_true(ctx);
+    return Z3_mk_and(ctx, clause_count, clauses);
+}
 
 Z3_ast tn_reduction(Z3_context ctx, const TunnelNetwork network, int length)
 {
@@ -865,11 +845,11 @@ Z3_ast tn_reduction(Z3_context ctx, const TunnelNetwork network, int length)
     Z3_ast phi_4 = create_phi_4(ctx, network, length);
     Z3_ast phi_5 = create_phi_5(ctx, network, length);
     Z3_ast phi_6 = create_phi_6(ctx, network, length);
+    Z3_ast phi_7 = create_phi_7(ctx, network, length);
 
-    // Combiner φ1 , φ2 , φ3 , φ4 , φ5 et φ6
-    Z3_ast formulas[6] = {phi_1, phi_2, phi_3, phi_4, phi_5, phi_6};
-    return Z3_mk_and(ctx, 6, formulas);
-
+    // Combiner φ1 , φ2 , φ3 , φ4 , φ5 , φ6 et φ7
+    Z3_ast formulas[7] = {phi_1, phi_2, phi_3, phi_4, phi_5, phi_6, phi_7};
+    return Z3_mk_and(ctx, 7, formulas);
 }
 
 void tn_get_path_from_model(Z3_context ctx, Z3_model model, TunnelNetwork network, int bound, tn_step *path)

@@ -800,44 +800,42 @@ Z3_ast create_phi_6_pop(Z3_context ctx, const TunnelNetwork network, int length)
                         // les cellules de 0 à height - 1 restent identiques et on retire la cellule height
                         if(height == 1)
                         {
-                        //si height = 1, on verifie juste la cellule 0 
-                        Z3_ast eq_4 = Z3_mk_eq(ctx, 
-                                            tn_4_variable(ctx, pos, 0),
-                                            tn_4_variable(ctx, pos + 1, 0));
-                            
-                        Z3_ast eq_6 = Z3_mk_eq(ctx, 
-                                            tn_6_variable(ctx, pos, 0),
-                                            tn_6_variable(ctx, pos + 1, 0));
+                            //si height = 1, on verifie juste la cellule 0 
+                            Z3_ast eq_4 = Z3_mk_eq(ctx, 
+                                                tn_4_variable(ctx, pos, 0),
+                                                tn_4_variable(ctx, pos + 1, 0));
 
-                        // Conjonction
-                        Z3_ast preservation_parts[2] ={eq_4, eq_6};
-                        Z3_ast conclusion = Z3_mk_and(ctx, 2, preservation_parts);    
-                        implications[impl_count] = Z3_mk_implies(ctx, premise, conclusion);
-                        impl_count++; 
+                            Z3_ast eq_6 = Z3_mk_eq(ctx, 
+                                                tn_6_variable(ctx, pos, 0),
+                                                tn_6_variable(ctx, pos + 1, 0));
+
+                            // Conjonction
+                            Z3_ast preservation_parts[2] ={eq_4, eq_6};
+                            Z3_ast conclusion = Z3_mk_and(ctx, 2, preservation_parts);    
+                            implications[impl_count] = Z3_mk_implies(ctx, premise, conclusion);
+                            impl_count++; 
                         } 
                         else 
                         {
-                        Z3_ast cell_preservations[height];
-                        for (int cell = 0; cell <= height; cell++)
-                        {
-                        Z3_ast eq_4 = Z3_mk_eq(ctx, 
-                                            tn_4_variable(ctx, pos, cell),
-                                            tn_4_variable(ctx, pos + 1, cell));
-                            
-                        Z3_ast eq_6 = Z3_mk_eq(ctx, 
-                                            tn_6_variable(ctx, pos, cell),
-                                            tn_6_variable(ctx, pos + 1, cell));
+                            Z3_ast cell_preservations[height];
+                            for (int cell = 0; cell <= height; cell++)
+                            {
+                                Z3_ast eq_4 = Z3_mk_eq(ctx, 
+                                                    tn_4_variable(ctx, pos, cell),
+                                                    tn_4_variable(ctx, pos + 1, cell));
 
-                        // Conjonction
-                        Z3_ast preservation_parts[2] ={eq_4, eq_6};
-                        cell_preservations[cell] = Z3_mk_and(ctx, 2, preservation_parts);    
-                        } 
-                        Z3_ast conclusion = Z3_mk_and(ctx, height, cell_preservations);
-                        implications[impl_count] = Z3_mk_implies(ctx, premise, conclusion);
-                        impl_count ++; 
-                        }     
-                        
-                        
+                                Z3_ast eq_6 = Z3_mk_eq(ctx, 
+                                                    tn_6_variable(ctx, pos, cell),
+                                                    tn_6_variable(ctx, pos + 1, cell));
+
+                                // Conjonction
+                                Z3_ast preservation_parts[2] ={eq_4, eq_6};
+                                cell_preservations[cell] = Z3_mk_and(ctx, 2, preservation_parts);    
+                            } 
+                            Z3_ast conclusion = Z3_mk_and(ctx, height, cell_preservations);
+                            implications[impl_count] = Z3_mk_implies(ctx, premise, conclusion);
+                            impl_count ++; 
+                        }        
                     } 
                 } 
             } 
@@ -848,6 +846,16 @@ Z3_ast create_phi_6_pop(Z3_context ctx, const TunnelNetwork network, int length)
     return Z3_mk_and(ctx, impl_count, implications);       
 }
 
+Z3_ast create_phi_6(Z3_context ctx, const TunnelNetwork network, int length)
+{
+    Z3_ast phi_6_trans = create_phi_6_trans(ctx, network, length);
+    Z3_ast phi_6_push = create_phi_6_push(ctx, network, length);
+    Z3_ast phi_6_pop = create_phi_6_pop(ctx, network, length);
+
+    Z3_ast phi_6_parts[3] ={phi_6_trans, phi_6_push, phi_6_pop};
+    return Z3_mk_and(ctx, 3, phi_6_parts);  
+}
+
 
 Z3_ast tn_reduction(Z3_context ctx, const TunnelNetwork network, int length)
 {
@@ -856,10 +864,11 @@ Z3_ast tn_reduction(Z3_context ctx, const TunnelNetwork network, int length)
     Z3_ast phi_3 = create_phi_3(ctx, network, length);
     Z3_ast phi_4 = create_phi_4(ctx, network, length);
     Z3_ast phi_5 = create_phi_5(ctx, network, length);
+    Z3_ast phi_6 = create_phi_6(ctx, network, length);
 
-    // Combiner φ1 , φ2 , φ3 , φ4 et φ5
-    Z3_ast formulas[5] = {phi_1, phi_2, phi_3, phi_4, phi_5};
-    return Z3_mk_and(ctx, 5, formulas);
+    // Combiner φ1 , φ2 , φ3 , φ4 , φ5 et φ6
+    Z3_ast formulas[6] = {phi_1, phi_2, phi_3, phi_4, phi_5, phi_6};
+    return Z3_mk_and(ctx, 6, formulas);
 
 }
 

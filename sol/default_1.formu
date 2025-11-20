@@ -1,0 +1,58 @@
+(and (or |node 0,pos 0, height 0|
+         |node 1,pos 0, height 0|
+         |node 2,pos 0, height 0|
+         |node 3,pos 0, height 0|
+         |node 4,pos 0, height 0|)
+     (or (not |node 0,pos 0, height 0|) (not |node 1,pos 0, height 0|))
+     (or (not |node 0,pos 0, height 0|) (not |node 2,pos 0, height 0|))
+     (or (not |node 0,pos 0, height 0|) (not |node 3,pos 0, height 0|))
+     (or (not |node 0,pos 0, height 0|) (not |node 4,pos 0, height 0|))
+     (or (not |node 1,pos 0, height 0|) (not |node 2,pos 0, height 0|))
+     (or (not |node 1,pos 0, height 0|) (not |node 3,pos 0, height 0|))
+     (or (not |node 1,pos 0, height 0|) (not |node 4,pos 0, height 0|))
+     (or (not |node 2,pos 0, height 0|) (not |node 3,pos 0, height 0|))
+     (or (not |node 2,pos 0, height 0|) (not |node 4,pos 0, height 0|))
+     (or (not |node 3,pos 0, height 0|) (not |node 4,pos 0, height 0|))
+     (or |node 0,pos 1, height 0|
+         |node 1,pos 1, height 0|
+         |node 2,pos 1, height 0|
+         |node 3,pos 1, height 0|
+         |node 4,pos 1, height 0|)
+     (or (not |node 0,pos 1, height 0|) (not |node 1,pos 1, height 0|))
+     (or (not |node 0,pos 1, height 0|) (not |node 2,pos 1, height 0|))
+     (or (not |node 0,pos 1, height 0|) (not |node 3,pos 1, height 0|))
+     (or (not |node 0,pos 1, height 0|) (not |node 4,pos 1, height 0|))
+     (or (not |node 1,pos 1, height 0|) (not |node 2,pos 1, height 0|))
+     (or (not |node 1,pos 1, height 0|) (not |node 3,pos 1, height 0|))
+     (or (not |node 1,pos 1, height 0|) (not |node 4,pos 1, height 0|))
+     (or (not |node 2,pos 1, height 0|) (not |node 3,pos 1, height 0|))
+     (or (not |node 2,pos 1, height 0|) (not |node 4,pos 1, height 0|))
+     (or (not |node 3,pos 1, height 0|) (not |node 4,pos 1, height 0|))
+     |node 0,pos 0, height 0|
+     |4 at height 0 on pos 0|
+     |node 0,pos 1, height 0|
+     |4 at height 0 on pos 1|
+     (=> (and |node 1,pos 0, height 0| |6 at height 0 on pos 0|)
+         (or |node 2,pos 1, height 0| |node 4,pos 1, height 0|))
+     (=> (and |node 2,pos 0, height 0| |6 at height 0 on pos 0|)
+         (or |node 3,pos 1, height 0|))
+     (=> (and |node 3,pos 0, height 0| |6 at height 0 on pos 0|)
+         (or |node 2,pos 1, height 0|))
+     (=> (and |node 4,pos 0, height 0| |6 at height 0 on pos 0|)
+         (or |node 4,pos 1, height 0|))
+     true
+     true
+     (=> (or |node 0,pos 0, height 0|
+             |node 1,pos 0, height 0|
+             |node 2,pos 0, height 0|
+             |node 3,pos 0, height 0|
+             |node 4,pos 0, height 0|)
+         (and (or (and |4 at height 0 on pos 0| (not |6 at height 0 on pos 0|))
+                  (and (not |4 at height 0 on pos 0|) |6 at height 0 on pos 0|))))
+     (=> (or |node 0,pos 1, height 0|
+             |node 1,pos 1, height 0|
+             |node 2,pos 1, height 0|
+             |node 3,pos 1, height 0|
+             |node 4,pos 1, height 0|)
+         (and (or (and |4 at height 0 on pos 1| (not |6 at height 0 on pos 1|))
+                  (and (not |4 at height 0 on pos 1|) |6 at height 0 on pos 1|)))))

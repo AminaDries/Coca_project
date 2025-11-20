@@ -1,0 +1,12 @@
+strict digraph "" {
+	0	[label="4→4",
+		shape=square];
+	13	[label="4↑44\n44↓4"];
+	0 -> 13;
+	11	[label="4→4"];
+	0 -> 11;
+	15	[label="4→4",
+		shape=invtriangle];
+	13 -> 15;
+	11 -> 15;
+}
